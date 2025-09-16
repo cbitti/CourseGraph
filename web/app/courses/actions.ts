@@ -1,9 +1,6 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
-
-type FieldErrors = Record<string, string[]>;
 
 const CourseSchema = z.object({
   code: z
@@ -17,7 +14,8 @@ const CourseSchema = z.object({
   credits: z.coerce.number().int().min(0).max(10),
 });
 
-export async function createCourse(formData: FormData) {
+/** Server action: create a course (returns void for <form action={...}>) */
+export async function createCourse(formData: FormData): Promise<void> {
   "use server";
 
   const parsed = CourseSchema.safeParse({
@@ -25,38 +23,33 @@ export async function createCourse(formData: FormData) {
     title: String(formData.get("title") ?? ""),
     credits: formData.get("credits"),
   });
-
   if (!parsed.success) {
-    return { ok: false as const, errors: parsed.error.flatten().fieldErrors as FieldErrors };
+    // TODO: later wire useFormState to show errors
+    return;
   }
 
   const { code, title, credits } = parsed.data;
-
   try {
     await prisma.course.create({ data: { code, title, credits } });
-    revalidatePath("/courses");
-    return { ok: true as const };
-  } catch (e: unknown) {
-    // Use Prisma's typed error instead of "any"
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { ok: false as const, errors: { code: ["Course code already exists"] } };
-    }
+  } catch (e) {
+    // Swallow duplicates for now (we’ll surface nicely with useFormState later)
     console.error(e);
-    return { ok: false as const, errors: { _form: ["Unexpected error creating course"] } };
+  } finally {
+    revalidatePath("/courses");
   }
 }
 
-export async function deleteCourse(formData: FormData) {
+/** Server action: delete a course (returns void for <form action={...}>) */
+export async function deleteCourse(formData: FormData): Promise<void> {
   "use server";
   const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false as const };
+  if (!id) return;
 
   try {
     await prisma.course.delete({ where: { id } });
-    revalidatePath("/courses");
-    return { ok: true as const };
-  } catch (e: unknown) {
+  } catch (e) {
     console.error(e);
-    return { ok: false as const };
+  } finally {
+    revalidatePath("/courses");
   }
 }
