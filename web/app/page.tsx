@@ -1,103 +1,86 @@
-import Image from "next/image";
+export const dynamic = "force-static";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-slate-100">
+      {/* Top nav */}
+      <header className="max-w-6xl mx-auto flex items-center justify-between px-4 py-6">
+        <a href="/" className="flex items-center gap-2 font-semibold">
+          <span className="h-6 w-6 rounded-lg bg-emerald-500 inline-block" />
+          CourseGraph
+        </a>
+        <nav className="hidden md:flex items-center gap-6 text-slate-300">
+          <a href="/courses" className="hover:text-white">Courses</a>
+          <a href="/api/courses" className="hover:text-white">API</a>
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://github.com/cbitti/CourseGraph"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
+            className="hover:text-white"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            GitHub
+          </a>
+        </nav>
+        <a
+          href="/courses"
+          className="px-4 py-2 rounded-xl bg-emerald-500/90 hover:bg-emerald-400 text-slate-900 font-medium"
+        >
+          Open demo
+        </a>
+      </header>
+
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-4 py-16 text-center">
+        <h1 className="text-5xl font-extrabold tracking-tight">
+          Plan your degree with confidence
+        </h1>
+        <p className="mt-4 text-lg text-slate-300">
+          Visualize prerequisites, build term-by-term plans, and get smart suggestions.
+        </p>
+        <div className="mt-8 flex justify-center gap-3">
+          <a
+            href="/courses"
+            className="px-5 py-3 rounded-xl bg-white text-slate-900 font-semibold shadow"
+          >
+            Try the demo
           </a>
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://github.com/cbitti/CourseGraph"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
+            className="px-5 py-3 rounded-xl border border-slate-700 hover:border-slate-500"
           >
-            Read our docs
+            View source
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* Features */}
+      <section className="max-w-6xl mx-auto px-4 pb-16 grid gap-6 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+          <h3 className="text-xl font-semibold mb-2">Prereq graph</h3>
+          <p className="text-slate-300">
+            Understand dependencies at a glance with a directed graph of your courses.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+          <h3 className="text-xl font-semibold mb-2">Planner</h3>
+          <p className="text-slate-300">
+            Drag courses into semesters and get warned when prerequisites aren’t met.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+          <h3 className="text-xl font-semibold mb-2">API-first</h3>
+          <p className="text-slate-300">
+            Typed Prisma models, Next.js API routes, and Postgres for persistence.
+          </p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="max-w-6xl mx-auto px-4 pb-10 text-slate-400 text-sm">
+        © {new Date().getFullYear()} CourseGraph. Built with Next.js, TypeScript, Prisma, Postgres.
       </footer>
-    </div>
+    </main>
   );
 }
