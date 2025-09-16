@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -10,7 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web   # run all steps inside the web/ app
+        working-directory: web
+    env:
+      DATABASE_URL: "file:./dev.db"      # ← give Prisma a DB on CI
+      NEXT_TELEMETRY_DISABLED: "1"       # ← optional: quieter logs
     steps:
       - uses: actions/checkout@v4
 
