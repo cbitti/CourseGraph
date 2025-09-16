@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
-// Validate inputs on the server
+type FieldErrors = Record<string, string[]>;
+
 const CourseSchema = z.object({
   code: z
     .string()
@@ -23,38 +25,38 @@ export async function createCourse(formData: FormData) {
     title: String(formData.get("title") ?? ""),
     credits: formData.get("credits"),
   });
+
   if (!parsed.success) {
-    // Minimal error surface; you can wire useFormState later to show these
-    return { ok: false, errors: parsed.error.flatten().fieldErrors };
+    return { ok: false as const, errors: parsed.error.flatten().fieldErrors as FieldErrors };
   }
 
   const { code, title, credits } = parsed.data;
 
   try {
     await prisma.course.create({ data: { code, title, credits } });
-    // Refresh the /courses page so the new item appears
     revalidatePath("/courses");
-    return { ok: true };
-  } catch (e: any) {
-    // Prisma unique violation = P2002
-    if (e?.code === "P2002") {
-      return { ok: false, errors: { code: ["Course code already exists"] } };
+    return { ok: true as const };
+  } catch (e: unknown) {
+    // Use Prisma's typed error instead of "any"
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return { ok: false as const, errors: { code: ["Course code already exists"] } };
     }
     console.error(e);
-    return { ok: false, errors: { _form: ["Unexpected error creating course"] } };
+    return { ok: false as const, errors: { _form: ["Unexpected error creating course"] } };
   }
 }
 
 export async function deleteCourse(formData: FormData) {
   "use server";
   const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false };
+  if (!id) return { ok: false as const };
+
   try {
     await prisma.course.delete({ where: { id } });
     revalidatePath("/courses");
-    return { ok: true };
-  } catch (e) {
+    return { ok: true as const };
+  } catch (e: unknown) {
     console.error(e);
-    return { ok: false };
+    return { ok: false as const };
   }
 }
