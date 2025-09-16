@@ -12,11 +12,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "CourseGraph",
   description: "Prerequisite-aware degree planner (Next.js + Prisma + Postgres).",
 };
-
 
 export default function RootLayout({
   children,

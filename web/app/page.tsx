@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const dynamic = "force-static";
 
 export default function HomePage() {
@@ -5,13 +7,17 @@ export default function HomePage() {
     <main className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-slate-100">
       {/* Top nav */}
       <header className="max-w-6xl mx-auto flex items-center justify-between px-4 py-6">
-        <a href="/" className="flex items-center gap-2 font-semibold">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
           <span className="h-6 w-6 rounded-lg bg-emerald-500 inline-block" />
-          CourseGraph
-        </a>
+          <span>CourseGraph</span>
+        </Link>
         <nav className="hidden md:flex items-center gap-6 text-slate-300">
-          <a href="/courses" className="hover:text-white">Courses</a>
-          <a href="/api/courses" className="hover:text-white">API</a>
+          <Link href="/courses" className="hover:text-white">
+            Courses
+          </Link>
+          <Link href="/api/courses" className="hover:text-white" prefetch={false}>
+            API
+          </Link>
           <a
             href="https://github.com/cbitti/CourseGraph"
             target="_blank"
@@ -21,12 +27,12 @@ export default function HomePage() {
             GitHub
           </a>
         </nav>
-        <a
+        <Link
           href="/courses"
           className="px-4 py-2 rounded-xl bg-emerald-500/90 hover:bg-emerald-400 text-slate-900 font-medium"
         >
           Open demo
-        </a>
+        </Link>
       </header>
 
       {/* Hero */}
@@ -38,12 +44,12 @@ export default function HomePage() {
           Visualize prerequisites, build term-by-term plans, and get smart suggestions.
         </p>
         <div className="mt-8 flex justify-center gap-3">
-          <a
+          <Link
             href="/courses"
             className="px-5 py-3 rounded-xl bg-white text-slate-900 font-semibold shadow"
           >
             Try the demo
-          </a>
+          </Link>
           <a
             href="https://github.com/cbitti/CourseGraph"
             target="_blank"
