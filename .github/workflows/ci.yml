@@ -1,33 +1,35 @@
-# .github/workflows/ci.yml
 name: CI
-
 on:
-  push:
-    branches: [ main ]
+  push: { branches: [ main ] }
   pull_request:
-
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: coursegraph
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd="pg_isready -U postgres -d coursegraph"
+          --health-interval=5s --health-timeout=5s --health-retries=10
     defaults:
-      run:
-        working-directory: web
+      run: { working-directory: web }
     env:
-      DATABASE_URL: "file:./dev.db"      # ← give Prisma a DB on CI
-      NEXT_TELEMETRY_DISABLED: "1"       # ← optional: quieter logs
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/coursegraph?schema=public"
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
+        with: { version: 9 }
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
-
       - run: pnpm install --frozen-lockfile
       - run: pnpm prisma generate
       - run: pnpm prisma migrate deploy
