@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * --- domain models for CourseGraph ---
+ */
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  plans     Plan[]
+}
+
+model Course {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  title     String
+  credits   Int
+  // edges: prereqs pointing *into* this course
+  prereqs   Prereq[]   @relation("IntoCourse")
+  // edges: prereqs where this course is the prerequisite for others
+  reqfor    Prereq[]   @relation("FromCourse")
+  planItems PlanItem[] // ← add this line (the back-relation)
+}
+
+model Prereq {
+  id           String @id @default(cuid())
+  fromCourse   Course @relation("FromCourse", fields: [fromCourseId], references: [id])
+  fromCourseId String
+  toCourse     Course @relation("IntoCourse", fields: [toCourseId], references: [id])
+  toCourseId   String
+}
+
+model Plan {
+  id        String     @id @default(cuid())
+  user      User       @relation(fields: [userId], references: [id])
+  userId    String
+  name      String
+  items     PlanItem[]
+  createdAt DateTime   @default(now())
+}
+
+model PlanItem {
+  id        String @id @default(cuid())
+  plan      Plan   @relation(fields: [planId], references: [id])
+  planId    String
+  course    Course @relation(fields: [courseId], references: [id])
+  courseId  String
+  termIndex Int
+  weight    Int    @default(0)
+}
