@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import type {
   Core as CyCore,
   ElementDefinition,
-  Stylesheet,
+  StylesheetCSS,
   LayoutOptions,
 } from 'cytoscape';
 
@@ -66,7 +66,7 @@ export default function GraphPage() {
   }, []);
 
   // Styles & layout
-  const stylesheet: Stylesheet[] = useMemo(
+  const stylesheet: StylesheetCSS[] = useMemo(
     () => [
       {
         selector: 'node',
