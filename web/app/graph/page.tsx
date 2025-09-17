@@ -3,10 +3,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import type cytoscape from 'cytoscape';
+import type {
+  Core as CyCore,
+  ElementDefinition,
+  Stylesheet,
+  LayoutOptions,
+} from 'cytoscape';
 
 // react-cytoscapejs must render on the client
-const CytoscapeComponent = dynamic(() => import('react-cytoscapejs'), { ssr: false });
+const CytoscapeComponent = dynamic(() => import('react-cytoscapejs'), {
+  ssr: false,
+});
 
 type Node = { id: string; label: string };
 type Edge = { from: string; to: string };
@@ -20,10 +27,10 @@ export default function GraphPage() {
   const searchParams = useSearchParams();
   const focusId = searchParams.get('focus');
 
-  const [els, setEls] = useState<any[]>([]);
+  const [els, setEls] = useState<ElementDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cyRef, setCyRef] = useState<cytoscape.Core | null>(null);
+  const [cyRef, setCyRef] = useState<CyCore | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -35,15 +42,20 @@ export default function GraphPage() {
         const { nodes, edges }: GraphResponse = await res.json();
 
         if (!alive) return;
-        const elements = [
-          ...nodes.map((n) => ({ data: { id: n.id, label: n.label } })),
-          ...edges.map((e, i) => ({
+
+        const elements: ElementDefinition[] = [
+          ...nodes.map<ElementDefinition>((n) => ({
+            data: { id: n.id, label: n.label },
+            group: 'nodes',
+          })),
+          ...edges.map<ElementDefinition>((e, i) => ({
             data: { id: `e-${i}`, source: e.from, target: e.to },
+            group: 'edges',
           })),
         ];
         setEls(elements);
-      } catch (e: any) {
-        if (alive) setError(e?.message ?? 'Failed to load graph');
+      } catch (e) {
+        if (alive) setError(e instanceof Error ? e.message : 'Failed to load graph');
       } finally {
         if (alive) setLoading(false);
       }
@@ -54,10 +66,27 @@ export default function GraphPage() {
   }, []);
 
   // Styles & layout
-  const stylesheet = useMemo(
+  const stylesheet: Stylesheet[] = useMemo(
     () => [
-      { selector: 'node', style: { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': 170, 'font-size': 10, 'background-opacity': 1 } },
-      { selector: 'edge', style: { 'curve-style': 'bezier', 'target-arrow-shape': 'triangle', 'arrow-scale': 1.2, width: 2 } },
+      {
+        selector: 'node',
+        style: {
+          label: 'data(label)',
+          'text-wrap': 'wrap',
+          'text-max-width': 170,
+          'font-size': 10,
+          'background-opacity': 1,
+        },
+      },
+      {
+        selector: 'edge',
+        style: {
+          'curve-style': 'bezier',
+          'target-arrow-shape': 'triangle',
+          'arrow-scale': 1.2,
+          width: 2,
+        },
+      },
       { selector: '.faded', style: { opacity: 0.2 } },
       { selector: '.focus', style: { 'border-width': 3 } },
       { selector: '.path', style: { width: 4 } },
@@ -65,13 +94,13 @@ export default function GraphPage() {
     []
   );
 
-  const layout = useMemo(
+  const layout: LayoutOptions = useMemo(
     () => ({ name: 'breadthfirst', directed: true, padding: 20, spacingFactor: 1.1 }),
     []
   );
 
   // Click to highlight predecessors/successors
-  function onCyReady(cy: cytoscape.Core) {
+  function onCyReady(cy: CyCore) {
     setCyRef(cy);
     cy.on('tap', 'node', (e) => {
       const node = e.target;
@@ -92,9 +121,8 @@ export default function GraphPage() {
   useEffect(() => {
     if (!cyRef || !focusId) return;
     const n = cyRef.$id(focusId);
-    if (n.nonempty()) {
+    if (n.length > 0) {
       cyRef.animate({ center: { eles: n }, zoom: 1.2 }, { duration: 400 });
-      n.flashClass?.('focus', 500); // harmless if plugin not present
     }
   }, [cyRef, focusId]);
 
@@ -119,8 +147,8 @@ export default function GraphPage() {
         <div className="h-[75vh] rounded-2xl border">
           <CytoscapeComponent
             elements={els}
-            layout={layout as any}
-            stylesheet={stylesheet as any}
+            layout={layout}
+            stylesheet={stylesheet}
             style={{ width: '100%', height: '100%' }}
             cy={onCyReady}
           />
