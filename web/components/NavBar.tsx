@@ -10,7 +10,8 @@ const ITEMS: Item[] = [
   { href: '/', label: 'Home', match: /^\/$/ },
   { href: '/courses', label: 'Courses', match: /^\/courses/ },
   { href: '/graph', label: 'Graph', match: /^\/graph/ },
-  { href: '/docs', label: 'API Docs', match: /^\/docs/ }, // safe to leave even if /docs isn’t built yet
+  { href: '/plan', label: 'Planner', match: /^\/plan/ },   // ← added
+  { href: '/docs', label: 'API Docs', match: /^\/docs/ },
 ];
 
 function NavLink({ item, pathname }: { item: Item; pathname: string }) {
@@ -21,9 +22,7 @@ function NavLink({ item, pathname }: { item: Item; pathname: string }) {
       aria-current={active ? 'page' : undefined}
       className={[
         'px-3 py-2 rounded-lg text-sm transition',
-        active
-          ? 'bg-gray-900 text-white'
-          : 'text-gray-700 hover:bg-gray-100',
+        active ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100',
       ].join(' ')}
     >
       {item.label}
@@ -56,6 +55,12 @@ export default function NavBar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            <Link
+              href="/courses"
+              className="px-3 py-2 rounded-lg text-sm text-white bg-emerald-500 hover:bg-emerald-600"
+            >
+              Open demo
+            </Link>
             <a
               href="https://github.com/cbitti/CourseGraph"
               target="_blank"

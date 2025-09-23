@@ -28,7 +28,7 @@ model Course {
   prereqs   Prereq[]   @relation("IntoCourse")
   // edges: prereqs where this course is the prerequisite for others
   reqfor    Prereq[]   @relation("FromCourse")
-  planItems PlanItem[] // ← add this line (the back-relation)
+  planItems PlanItem[] // back-relation to PlanItem
 }
 
 model Prereq {
@@ -37,6 +37,10 @@ model Prereq {
   fromCourseId String
   toCourse     Course @relation("IntoCourse", fields: [toCourseId], references: [id])
   toCourseId   String
+
+  @@unique([fromCourseId, toCourseId], name: "from_to_unique")
+  @@index([fromCourseId])
+  @@index([toCourseId])
 }
 
 model Plan {
