@@ -3,7 +3,7 @@ export type Edge = { from: string; to: string };
 
 type Graph = {
   nodes: Map<string, CourseNode>;
-  prereqsOf: Map<string, Set<string>>;   // node <- prerequisites
+  prereqsOf: Map<string, Set<string>>;    // node <- prerequisites
   dependentsOf: Map<string, Set<string>>; // node -> dependents
 };
 
@@ -23,32 +23,52 @@ export function buildGraph(nodes: CourseNode[], edges: Edge[]): Graph {
   return { nodes: nodeMap, prereqsOf, dependentsOf };
 }
 
+// Custom typed error for cycles
+export class CycleError extends Error {
+  readonly stuck: string[];
+  constructor(stuck: string[]) {
+    super(`Cycle detected among: ${stuck.join(", ")}`);
+    this.name = "CycleError";
+    this.stuck = stuck;
+  }
+}
+
 // Courses whose all prereqs are satisfied by `completed`
 export function eligibleNext(g: Graph, completed: Set<string>): string[] {
   const res: string[] = [];
   for (const [id, prereqs] of g.prereqsOf.entries()) {
     if (completed.has(id)) continue;
     let ok = true;
-    for (const p of prereqs) if (!completed.has(p)) { ok = false; break; }
+    for (const p of prereqs) {
+      if (!completed.has(p)) {
+        ok = false;
+        break;
+      }
+    }
     if (ok) res.push(id);
   }
   // stable-ish order: by code, then title, then id
   res.sort((a, b) => {
-    const A = g.nodes.get(a)!; const B = g.nodes.get(b)!;
-    return (A.code ?? '').localeCompare(B.code ?? '') ||
-           (A.title ?? '').localeCompare(B.title ?? '') ||
-           a.localeCompare(b);
+    const A = g.nodes.get(a)!;
+    const B = g.nodes.get(b)!;
+    return (
+      (A.code ?? "").localeCompare(B.code ?? "") ||
+      (A.title ?? "").localeCompare(B.title ?? "") ||
+      a.localeCompare(b)
+    );
   });
   return res;
 }
 
-// Kahn topo; returns order or throws on cycle with the stuck nodes
+// Kahn topo; returns order or throws CycleError with the stuck nodes
 export function topoOrder(g: Graph): string[] {
   const indeg = new Map<string, number>();
   for (const [id, prereqs] of g.prereqsOf) indeg.set(id, prereqs.size);
+
   const q: string[] = [];
   for (const [id, d] of indeg) if (d === 0) q.push(id);
   q.sort();
+
   const out: string[] = [];
   while (q.length) {
     const id = q.shift()!;
@@ -59,11 +79,10 @@ export function topoOrder(g: Graph): string[] {
     }
     q.sort();
   }
+
   if (out.length !== g.nodes.size) {
     const stuck = [...g.nodes.keys()].filter(id => !out.includes(id));
-    const err = new Error(`Cycle detected among: ${stuck.join(', ')}`);
-    (err as any).stuck = stuck;
-    throw err;
+    throw new CycleError(stuck);
   }
   return out;
 }
@@ -78,7 +97,7 @@ export function planTerms(
   const completed = new Set<string>();
   const planned: string[][] = [];
 
-  // pre-check for cycles (will throw if present)
+  // pre-check for cycles (will throw CycleError if present)
   topoOrder(g);
 
   while (true) {
@@ -87,7 +106,6 @@ export function planTerms(
     if (remaining.length === 0) break;
     if (eligible.length === 0) {
       // No eligible among targets, but still remaining -> unmet prereqs outside target or cycle
-      // Here we stop rather than throwing; caller can inspect remaining
       break;
     }
     const take = eligible.slice(0, Math.max(1, maxPerTerm));
