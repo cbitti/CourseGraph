@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  title: CourseGraph API
+  version: 0.1.0
+  description: |
+    Simple API for managing courses and prerequisite edges, plus a graph view.
+servers:
+  - url: /
+paths:
+  /api/courses:
+    get:
+      summary: List courses
+      operationId: listCourses
+      responses:
+        "200":
+          description: Array of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+    post:
+      summary: Create a course
+      operationId: createCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourseCreate"
+      responses:
+        "201":
+          description: Created course
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+        "400":
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/courses/{id}:
+    delete:
+      summary: Delete a course
+      operationId: deleteCourse
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/courses/graph:
+    get:
+      summary: Get course graph (nodes & edges)
+      operationId: getCourseGraph
+      responses:
+        "200":
+          description: Graph data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphResponse"
+
+components:
+  schemas:
+    Course:
+      type: object
+      properties:
+        id:
+          oneOf:
+            - type: string
+            - type: integer
+        code:
+          type: string
+        title:
+          type: string
+      required: [id, code]
+      example: { id: 1, code: "CS101", title: "Intro to CS" }
+    CourseCreate:
+      type: object
+      properties:
+        code:
+          type: string
+        title:
+          type: string
+      required: [code]
+      example: { code: "CS201", title: "Data Structures" }
+    GraphNode:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required: [id, label]
+      example: { id: "1", label: "CS101 — Intro to CS" }
+    GraphEdge:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+      required: [from, to]
+      example: { from: "1", to: "2" }
+    GraphResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphEdge"
+      required: [nodes, edges]
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
