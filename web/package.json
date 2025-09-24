@@ -6,9 +6,13 @@
         "dev": "next dev --turbopack",
         "build": "next build --turbopack",
         "start": "next start",
-        "lint": "next lint",
+        "lint": "eslint . --max-warnings=0",
         "prisma:seed": "prisma db seed",
-        "postinstall": "prisma generate"
+        "postinstall": "prisma generate",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest",
+        "test:ci": "vitest run --coverage",
+        "prebuild": "pnpm typecheck"
     },
     "dependencies": {
         "@prisma/client": "^6.16.1",
@@ -26,13 +30,17 @@
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
+        "@typescript-eslint/eslint-plugin": "^8.44.1",
+        "@typescript-eslint/parser": "^8.44.1",
         "eslint": "^9",
         "eslint-config-next": "15.5.3",
         "prisma": "^6.16.1",
         "tailwindcss": "^4",
         "ts-node": "^10.9.2",
         "tsx": "^4.20.5",
-        "typescript": "^5"
+        "typescript": "^5",
+        "vite-tsconfig-paths": "^5.1.4",
+        "vitest": "^3.2.4"
     },
     "prisma": {
         "seed": "tsx prisma/seed.ts"

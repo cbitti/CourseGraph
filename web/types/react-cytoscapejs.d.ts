@@ -6,8 +6,8 @@ declare module 'react-cytoscapejs' {
   export interface CytoscapeComponentProps {
     elements: ElementDefinition[];
     layout?: LayoutOptions;
-    // Accept any here to avoid strict coupling to cytoscape's stylesheet types
-    stylesheet?: any;
+    // keep flexible but typed (avoid `any`)
+    stylesheet?: unknown;
     style?: CSSProperties;
     cy?: (cy: CyCore) => void;
   }
