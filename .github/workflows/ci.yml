@@ -64,3 +64,12 @@ jobs:
 
       - name: Test
         run: pnpm test:ci
+
+      - name: Upload coverage (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: web/coverage
+          if-no-files-found: warn
+

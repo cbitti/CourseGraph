@@ -1,63 +1,38 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// IDs are strings in your schema (cuid)
-type CourseId = string;
-
 async function main() {
-  // Detect whether Course.credits exists
-  const hasCredits =
-    Prisma.dmmf.datamodel.models
-      .find((m) => m.name === "Course")
-      ?.fields.some((f) => f.name === "credits") ?? false;
+  // Upsert demo courses by unique code
+  const cs101 = await prisma.course.upsert({
+    where: { code: 'CS101' },
+    update: { title: 'Intro to CS', credits: 4 },
+    create: { code: 'CS101', title: 'Intro to CS', credits: 4 },
+  });
 
-  const courses = [
-    { code: "CS101", title: "Intro to CS", credits: 4 },
-    { code: "CS201", title: "Data Structures", credits: 4 },
-    { code: "CS301", title: "Algorithms", credits: 4 },
-  ];
+  const cs201 = await prisma.course.upsert({
+    where: { code: 'CS201' },
+    update: { title: 'Data Structures', credits: 4 },
+    create: { code: 'CS201', title: 'Data Structures', credits: 4 },
+  });
 
-  // Upsert by unique code
-  const byCode: Record<string, { id: CourseId }> = {};
+  const cs301 = await prisma.course.upsert({
+    where: { code: 'CS301' },
+    update: { title: 'Algorithms', credits: 4 },
+    create: { code: 'CS301', title: 'Algorithms', credits: 4 },
+  });
 
-  for (const c of courses) {
-    const createBase = { code: c.code, title: c.title } as Record<string, unknown>;
-    const updateBase = { title: c.title } as Record<string, unknown>;
-    if (hasCredits) {
-      createBase["credits"] = c.credits;
-      updateBase["credits"] = c.credits;
-    }
+  // Edges (deduped by DB unique constraint)
+  await prisma.prereq.createMany({
+    data: [
+      { fromCourseId: cs101.id, toCourseId: cs201.id },
+      { fromCourseId: cs201.id, toCourseId: cs301.id },
+    ],
+    skipDuplicates: true,
+  });
 
-    const course = await prisma.course.upsert({
-      where: { code: c.code },
-      update: updateBase as Prisma.CourseUpdateInput,
-      create: createBase as Prisma.CourseCreateInput,
-    });
-
-    byCode[c.code] = { id: course.id as CourseId };
-  }
-
-  // Prereq edges (from -> to)
-  const pairs: Array<[string, string]> = [
-    ["CS101", "CS201"],
-    ["CS201", "CS301"],
-  ];
-
-  const edgeRows: Prisma.PrereqCreateManyInput[] = [];
-  for (const [from, to] of pairs) {
-    const fromId = byCode[from]?.id;
-    const toId = byCode[to]?.id;
-    if (!fromId || !toId) continue;
-    edgeRows.push({ fromCourseId: fromId, toCourseId: toId });
-  }
-
-  if (edgeRows.length) {
-    await prisma.prereq.createMany({ data: edgeRows, skipDuplicates: true });
-  }
-
-  console.log("Seeded courses:", Object.keys(byCode).join(", "));
-  console.log("Seeded edges:", pairs.map(([a, b]) => `${a}→${b}`).join(", "));
+  console.log('Seeded courses: CS101, CS201, CS301');
+  console.log('Seeded edges: CS101→CS201, CS201→CS301');
 }
 
 main()

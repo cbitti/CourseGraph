@@ -1,13 +1,22 @@
 import { prisma } from "@/lib/db";
 import { createCourse, deleteCourse } from "./actions";
 
+type UICourse = {
+  id: string;
+  code: string;
+  title: string;
+  credits: number;
+  prereqs: { id: string }[]; // minimal shape—we only read .length
+  reqfor: { id: string }[];
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function CoursesPage() {
-  const courses = await prisma.course.findMany({
+  const courses = (await prisma.course.findMany({
     orderBy: { code: "asc" },
     include: { prereqs: true, reqfor: true },
-  });
+  })) as unknown as UICourse[];
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">

@@ -8,10 +8,11 @@ export default defineConfig({
     environment: "node",
     include: ["lib/**/*.test.ts"],
     pool: "forks",
-    poolOptions: { forks: { singleFork: true } }, // run in a single process
+    poolOptions: { forks: { singleFork: true } },
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
+      enabled: !process.env.CI, // disable coverage on CI
     },
   },
 });
