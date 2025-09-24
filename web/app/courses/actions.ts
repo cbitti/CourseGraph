@@ -1,55 +1,65 @@
-import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
+'use server';
 
-const CourseSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .min(2, "Code is too short")
-    .max(16, "Code is too long")
-    .regex(/^[A-Za-z0-9-]+$/, "Code can only have letters, numbers, and dashes")
-    .transform((s) => s.toUpperCase()),
-  title: z.string().trim().min(2, "Title is too short").max(100, "Title is too long"),
-  credits: z.coerce.number().int().min(0).max(10),
-});
+import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
 
-/** Server action: create a course (returns void for <form action={...}>) */
-export async function createCourse(formData: FormData): Promise<void> {
-  "use server";
+// Create or update a course by unique code
+export async function createCourse(formData: FormData) {
+  const rawCode = String(formData.get('code') ?? '').trim();
+  const code = rawCode.toUpperCase();
+  const title = String(formData.get('title') ?? '').trim();
+  const credits = Number(formData.get('credits') ?? 0);
 
-  const parsed = CourseSchema.safeParse({
-    code: String(formData.get("code") ?? ""),
-    title: String(formData.get("title") ?? ""),
-    credits: formData.get("credits"),
+  if (!code) return;
+
+  await prisma.course.upsert({
+    where: { code },
+    update: { title, credits },
+    create: { code, title, credits },
   });
-  if (!parsed.success) {
-    // TODO: later wire useFormState to show errors
-    return;
-  }
 
-  const { code, title, credits } = parsed.data;
-  try {
-    await prisma.course.create({ data: { code, title, credits } });
-  } catch (e) {
-    // Swallow duplicates for now (we’ll surface nicely with useFormState later)
-    console.error(e);
-  } finally {
-    revalidatePath("/courses");
-  }
+  revalidatePath('/courses');
+  revalidatePath('/graph');
 }
 
-/** Server action: delete a course (returns void for <form action={...}>) */
-export async function deleteCourse(formData: FormData): Promise<void> {
-  "use server";
-  const id = String(formData.get("id") ?? "");
+// Delete a course (and dependent edges/items)
+export async function deleteCourse(formData: FormData) {
+  const id = String(formData.get('id') ?? '');
   if (!id) return;
 
+  await prisma.$transaction([
+    prisma.prereq.deleteMany({ where: { OR: [{ fromCourseId: id }, { toCourseId: id }] } }),
+    prisma.planItem.deleteMany({ where: { courseId: id } }),
+    prisma.course.delete({ where: { id } }),
+  ]);
+
+  revalidatePath('/courses');
+  revalidatePath('/graph');
+}
+
+// Add a prerequisite edge: fromCourseId -> toCourseId
+export async function addPrereq(formData: FormData) {
+  const fromCourseId = String(formData.get('fromCourseId') ?? '');
+  const toCourseId = String(formData.get('toCourseId') ?? '');
+  if (!fromCourseId || !toCourseId || fromCourseId === toCourseId) return;
+
   try {
-    await prisma.course.delete({ where: { id } });
-  } catch (e) {
-    console.error(e);
-  } finally {
-    revalidatePath("/courses");
+    await prisma.prereq.create({ data: { fromCourseId, toCourseId } });
+  } catch {
+    // ignore duplicates due to unique(fromCourseId,toCourseId)
   }
+
+  revalidatePath('/courses');
+  revalidatePath('/graph');
+}
+
+// Remove a prerequisite edge by id
+export async function deletePrereq(formData: FormData) {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  await prisma.prereq.delete({ where: { id } });
+
+  revalidatePath('/courses');
+  revalidatePath('/graph');
 }
