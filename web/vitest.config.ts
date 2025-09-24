@@ -4,12 +4,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    globals: true,            // makes describe/it/expect available
+    globals: true,
     environment: "node",
     include: ["lib/**/*.test.ts"],
+    pool: "forks",
+    poolOptions: { forks: { singleFork: true } }, // run in a single process
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"] // <- 'reporter' (not 'reports') in Vitest v3
-    }
-  }
+      reporter: ["text", "lcov"],
+    },
+  },
 });
